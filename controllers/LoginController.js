@@ -1,18 +1,18 @@
 const jwt = require('jsonwebtoken');
-const UserModel = require('../models/UserModel');
+const LoginModel = require('../models/UserModel');
 
 const LoginController = {
   login: async (req, res) => {
     const { username, password } = req.body;
 
     try {
-      const user = await UserModel.findByUsername(username);
+      const user = await LoginModel.findByUsername(username);
 
       if (!user) {
         return res.status(401).json({ message: 'Invalid username or password' });
       }
 
-      const isPasswordValid = await UserModel.validatePassword(password, user.password);
+      const isPasswordValid = await LoginModel.validatePassword(password, user.password);
 
       if (!isPasswordValid) {
         return res.status(401).json({ message: 'Invalid username or password' });
