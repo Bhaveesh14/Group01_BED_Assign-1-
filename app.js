@@ -14,13 +14,11 @@ app.use(express.urlencoded({ extended: true }));
 
 const loginRoutes = require('./routes/loginRoutes');
 const registerRoutes = require('./routes/registerRoutes');
-const protectedRoutes = require('./routes/protectedRoutes');
-
+const userRoutes = require('./routes/userRoutes');
 
 app.use('/login', loginRoutes);
 app.use('/register', registerRoutes);
-app.use('/api', protectedRoutes);
-
+app.use('/users', userRoutes);
 
 // 404 handler
 app.use((req, res) => {
