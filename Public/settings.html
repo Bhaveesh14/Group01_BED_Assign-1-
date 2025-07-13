@@ -1,1 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Settings Page</title>
+  <style>
+    :root {
+      --teal: #4db6ac;
+      --light-bg: #f9fafa;
+      --white: #fff;
+      --input-bg: #ecf4fd;
+      --gray: #888;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', sans-serif;
+    }
+
+    html, body {
+      height: 100%;
+      background: var(--light-bg);
+    }
+
+    body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .container {
+      display: flex;
+      width: 90%;
+      max-width: 1200px;
+      height: 90vh;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    }
+
+    /* Left Panel */
+    .settings-panel {
+      width: 40%;
+      background: var(--teal);
+      color: var(--white);
+      padding: 40px 30px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .settings-panel .icon {
+      font-size: 50px;
+      margin-bottom: 10px;
+    }
+
+    .settings-panel h2 {
+      font-size: 26px;
+      margin-bottom: 30px;
+    }
+
+    .settings-panel label {
+      align-self: flex-start;
+      margin-left: 10%;
+      margin-bottom: 6px;
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    .settings-panel input {
+      width: 80%;
+      padding: 10px 14px;
+      border-radius: 25px;
+      border: none;
+      margin-bottom: 18px;
+      font-size: 15px;
+      text-align: center;
+    }
+
+    .settings-panel .button {
+      width: 80%;
+      padding: 12px;
+      border-radius: 25px;
+      border: none;
+      background: var(--white);
+      color: var(--teal);
+      font-weight: bold;
+      margin-top: 10px;
+      transition: 0.2s;
+    }
+
+    .settings-panel .button:hover {
+      background: #e8f5f3;
+    }
+
+    /* Right Panel */
+    .profile-panel {
+      width: 60%;
+      background: var(--white);
+      padding: 60px 50px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .user-info {
+      display: flex;
+      align-items: center;
+      margin-bottom: 30px;
+    }
+
+    .avatar {
+      width: 80px;
+      height: 80px;
+      background: #ddd;
+      border-radius: 50%;
+      margin-right: 20px;
+    }
+
+    .email-display {
+      font-size: 18px;
+      font-weight: 600;
+    }
+
+    .subtext {
+      font-size: 14px;
+      color: var(--gray);
+    }
+
+    .field {
+      margin-bottom: 20px;
+    }
+
+    .field label {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    .field input {
+      width: 100%;
+      padding: 12px 18px;
+      border-radius: 25px;
+      border: 1px solid #cbd6e2;
+      background-color: var(--input-bg);
+      font-size: 15px;
+    }
+
+    .buttons {
+      display: flex;
+      gap: 15px;
+      margin-top: 10px;
+      flex-wrap: wrap;
+    }
+
+    .buttons .button {
+      padding: 10px 22px;
+      border: none;
+      border-radius: 25px;
+      background-color: var(--teal);
+      color: var(--white);
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .buttons .button:hover {
+      background-color: #43968e;
+    }
+
+    .buttons .logout {
+      background: transparent;
+      color: var(--teal);
+      border: 2px solid var(--teal);
+    }
+
+    .buttons .logout:hover {
+      background: #e0f7f6;
+    }
+
+    @media (max-width: 768px) {
+      .container {
+        flex-direction: column;
+        height: auto;
+      }
+
+      .settings-panel, .profile-panel {
+        width: 100%;
+        padding: 30px;
+      }
+
+      .buttons {
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Left Panel -->
+    <div class="settings-panel">
+      <div class="icon">⚙️</div>
+      <h2>Settings</h2>
+
+      <label for="dob">Date of Birth</label>
+      <input type="text" id="dob" placeholder="DD/MM/YYYY" />
+
+      <button class="button">Medical History</button>
+      <button class="button">Update Conditions</button>
+    </div>
+
+    <!-- Right Panel -->
+    <div class="profile-panel">
+      <div class="user-info">
+        <div class="avatar"></div>
+        <div>
+          <p class="email-display" id="userEmailDisplay">user@gmail.com</p>
+          <p class="subtext">Mr/Miss User</p>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="emailInput">Email</label>
+        <input type="email" id="emailInput" placeholder="user@example.com" />
+      </div>
+
+      <div class="field">
+        <label for="passwordInput">Password</label>
+        <input type="password" id="passwordInput" placeholder="********" />
+      </div>
+
+      <div class="buttons">
+        <button class="button" id="editBtn">Save Changes</button>
+        <button class="button logout">Log Out</button>
+        <button class="button" id="leaveBtn">← Leave Page</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const userId = 1;
+
+    // Load user data
+    window.onload = () => {
+      fetch(http://localhost:3000/user/${userId})
+        .then(res => res.json())
+        .then(data => {
+          document.querySelector('#emailInput').value = data.email;
+          document.querySelector('#passwordInput').value = data.password;
+          document.querySelector('#userEmailDisplay').textContent = data.email;
+        });
+    };
+
+    // Save updated data
+    document.querySelector('#editBtn').addEventListener('click', () => {
+      const email = document.querySelector('#emailInput').value;
+      const password = document.querySelector('#passwordInput').value;
+
+      fetch(http://localhost:3000/user/${userId}, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      })
+      .then(res => res.json())
+      .then(data => {
+        alert(data.message);
+        document.querySelector('#userEmailDisplay').textContent = email;
+      });
+    });
+
+    // Leave button functionality to go to page.html
+    document.querySelector('#leaveBtn').addEventListener('click', () => {
+      window.location.href = 'page.html';
+    });
+  </script>
+</body>
+</html>
 
