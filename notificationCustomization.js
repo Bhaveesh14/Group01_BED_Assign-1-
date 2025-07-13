@@ -1,0 +1,513 @@
+
+const savedDate = localStorage.getItem("selectedDate");
+
+document.getElementById("back-button").addEventListener("click", function() {
+    window.location.href = "../HTML files/expandedCalendar.html";
+    savedDate.remove();
+});
+
+function displayDate() {
+    const dateDiv = document.createElement("div");
+    dateDiv.className = "date-display"
+    const dateContainer = document.getElementById("date-display");
+    
+    dateContainer.innerHTML = ""; // Clear previous content
+    const date = savedDate ? savedDate : "No date selected";
+    dateDiv.textContent = date;
+    dateContainer.appendChild(dateDiv);
+}
+
+async function fetchAndDisplayNotifications() {
+    if (!savedDate) {
+        return;
+    }
+
+    try {
+        const response = await fetch(`http://localhost:3000/medications?date=${savedDate}`);
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+
+        const medication = await response.json();
+        const savedNotification = document.getElementById("saved-notification");
+        savedNotification.innerHTML = ""; // Clear previous content
+
+        if(medication.length === 0) {
+            savedNotification.textContent = "No notifications saved for this date.";
+        }
+        medication.forEach(med => {
+            const createDiv = document.createElement("div");
+            createDiv.className = "notification-item";
+            item.innerHTML = `
+                <span class="medication-name">${med.name}</span>
+                <span class="schedule-hour">${med.schedule_hour}</span>
+                <span class="schedule-minute">${med.schedule_minute}</span>
+                <span class="dosage">${med.dosage}</span>
+            `;
+        });  
+        savedNotification.appendChild(createDiv);
+    } catch (err) {
+        console.error("Error fetching notifications:", err);
+    }
+}
+
+document.addEventListener("DOMContentLoaded", fetchAndDisplayNotifications);
+
+function validateMedicationInput(data) {
+    if (!data.name || data.name.trim() === "") {
+        alert("Name is required.");
+        return false;
+    }
+
+    if (
+        !Number.isFinite(data.repeat_times) ||
+        !Number.isInteger(data.repeat_times) ||
+        data.repeat_times < 1
+    ) {
+        alert("Repeat times must be a positive whole number.");
+        return false;
+    }
+
+    if (
+        !Number.isFinite(data.repeat_duration) ||
+        !Number.isInteger(data.repeat_duration) ||
+        data.repeat_duration < 1
+    ) {
+        alert("Duration must be a positive whole number.");
+        return false;
+    }
+
+    if (
+        !Number.isFinite(data.start_hour) ||
+        !Number.isInteger(data.start_hour) ||
+        data.start_hour < 0 || data.start_hour > 23
+    ) {
+        alert("Start hour must be a whole number between 0 and 23.");
+        return false;
+    }
+
+    if (
+        !Number.isFinite(data.end_hour) ||
+        !Number.isInteger(data.end_hour) ||
+        data.end_hour < 0 || data.end_hour > 23
+    ) {
+        alert("End hour must be a whole number between 0 and 23.");
+        return false;
+    }
+
+    if (!data.frequency_type || typeof data.frequency_type !== 'string') {
+        alert("Frequency type is required.");
+        return false;
+    }
+
+    return true;
+}
+
+async function addMedicationContainer () {
+    document.getElementById('add-container-button').addEventListener('click', function(event) {
+        event.preventDefault();
+
+        let addBoxContainer = document.querySelector('.add-box-container');
+
+        if (!addBoxContainer) {
+            addBoxContainer = document.createElement("div");
+            addBoxContainer.className = 'add-box-container';
+            addBoxContainer.style.display = 'none';
+            addBoxContainer.innerHTML = `
+                <div class="title">
+                    <button type="button" id="close-add-window">X</button>
+                    <h3>Add Features</h3>
+                </div>
+                <div class="add-features" id="add-features">
+                    <h3>To do item</h3>
+                    <input type="text" placeholder="To do item" id="to-do-item" class="general-info">
+                    <h3>Day on repeat</h3>
+                    <div class="day-on-repeat">
+                        <input type="text" placeholder="Repeat a day count" id="repeat-times" class="general-info">
+                        <span class="arrow">→</span>
+                        <input type="text" placeholder="Duration" id="duration-of-reminder" class="general-info">
+                    </div>
+                    <h3>Hour range</h3>
+                    <div class="hour-range-container">
+                        <input type="time" id="first-hour-range" class="general-info">
+                        <span class="arrow">→</span>
+                        <input type="time" id="second-hour-range" class="general-info">
+                    </div>
+                    <h3>Repeat</h3>
+                    <div class="routine_option-and-schedule">
+                        <select class="general-info" id="repeat-select">
+                            <option value="daily">Daily</option>
+                            <option value="weekly">Weekly</option>
+                            <option value="monthly">Monthly</option>
+                            <option value="yearly">Yearly</option>
+                        </select>
+                        <button type="submit" id="submit-add-info">Submit</button>
+                    </div>
+                </div>
+            `;
+            const mainContainer = document.querySelector('.main-container');
+            mainContainer.appendChild(addBoxContainer);
+
+            addBoxContainer.querySelector('#close-add-window').addEventListener('click', () => {
+                addBoxContainer.style.display = 'none';
+            });
+
+           addBoxContainer.querySelector('#submit-add-info').addEventListener('click', async function(event) {
+                event.preventDefault();
+
+                if (!savedDate) {
+                    alert("Please select a date first.");
+                    return;
+                }
+
+                const item = document.getElementById("to-do-item").value;
+                const repeatRaw = document.getElementById("repeat-times").value.trim();
+                const day_on_repeat = repeatRaw === "" ? NaN : Number(repeatRaw);
+
+                const durationRaw = document.getElementById("duration-of-reminder").value.trim();
+                const duration_of_reminder = durationRaw === "" ? NaN : Number(durationRaw);
+
+                
+                const startHourRaw = document.getElementById('first-hour-range').value;
+                const endHourRaw = document.getElementById('second-hour-range').value;
+
+                const startHour = startHourRaw ? parseInt(startHourRaw.split(":")[0], 10) : NaN;
+                const endHour = endHourRaw ? parseInt(endHourRaw.split(":")[0], 10) : NaN;
+
+                const repeatSelect = document.getElementById('repeat-select').value;
+
+                const medicationData = {
+                    name: item,
+                    repeat_times: day_on_repeat,
+                    repeat_duration: duration_of_reminder,
+                    start_hour: startHour,
+                    end_hour: endHour,
+                    frequency_type: repeatSelect,
+                    schedule_date: savedDate,
+                    schedule_hour: startHour
+                };
+
+                if (!validateMedicationInput(medicationData)) return;
+
+
+                try {
+                    const response = await fetch('http://localhost:3000/medications', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(medicationData)
+                    });
+
+                    const result = await response.json();
+
+                    if (response.ok) {
+                    addBoxContainer.style.display = 'none';
+                    ModifyMedicationContainer(); // Refresh list
+                    } else {
+                    alert(result.message || "Failed to add medication.");
+                    }
+                } catch (err) {
+                    console.error("Error adding medication:", err);
+                    alert("Server error. Could not add medication.");
+                }
+                });
+
+
+        }
+        addBoxContainer.style.display = (addBoxContainer.style.display === 'none') ? 'flex' : 'none';
+        console.log("Final medicationData before insert:", medicationData);
+    });
+}
+
+document.addEventListener('DOMContentLoaded', addMedicationContainer);
+
+// Add container based on notifications
+async function ModifyMedicationContainer() {
+    if (!savedDate) return;
+
+    try {
+        const response = await fetch(`http://localhost:3000/medications/by-date?date=${savedDate}`);
+        const medications = await response.json(); // Retrieve the medication json
+
+        const parentContainer = document.getElementById("saved-notification-container");
+        parentContainer.innerHTML = "";
+
+        for (const med of medications) { // iterate the medication list of json 
+            const mainDiv = document.createElement('div');
+            mainDiv.className = 'saved-notification-container';
+
+            const deleteNotificationContainer = document.createElement("button");
+            deleteNotificationContainer.textContent = 'X';
+            deleteNotificationContainer.type = 'button';
+            deleteNotificationContainer.className = 'delete-notification-container';
+
+            // Layer 1: Medication Name + Edit Button
+            const layer1 = document.createElement("div");
+            layer1.className = 'layer1-container';
+
+            // Add the notification container
+            const medName = document.createElement('div');
+            medName.className = 'medicine-name';
+            medName.textContent = med.name; // Add a specific column of the Json "name"
+
+            const editButton = document.createElement("button");
+            editButton.type = 'button';
+            editButton.className = 'edit-button';
+            editButton.textContent = 'Edit';
+
+            layer1.appendChild(medName);
+            layer1.appendChild(editButton);
+
+            const hr = document.createElement("hr");
+            hr.style.cssText = "width: 100%; height: 0; margin: 0; padding: 0";
+
+            // Layer 2: Notes and Add Button
+            const layer2 = document.createElement("div");
+            layer2.className = 'layer2-container';  
+
+            const buttonWrapper = document.createElement("div");
+            buttonWrapper.className = 'button-wrapper';
+
+            const addButton = document.createElement("button");
+            addButton.type = 'button';
+            addButton.className = 'add-button';
+            addButton.textContent = '+';
+
+          try {
+            const noteRes = await fetch(`http://localhost:3000/medications/${med.id}/notes/auto`);
+            const notes = await noteRes.json(); // array of strings
+
+            notes.forEach(noteText => {
+                const noteDiv = document.createElement('div');
+                noteDiv.className = 'prompt-info';
+                noteDiv.textContent = noteText;
+                buttonWrapper.appendChild(noteDiv); // Append notes first
+            });
+        } catch (err) {
+            console.error(`Failed to load notes for med ${med.id}`, err);
+        }
+        
+        layer2.appendChild(buttonWrapper);
+        layer2.appendChild(addButton); 
+            // Add new note through + button
+
+            addButton.addEventListener('click', () => {
+                let inputBox = layer2.querySelector('input.prompt-info');
+                if (!inputBox) {
+                    inputBox = document.createElement("input");
+                    inputBox.className = 'prompt-info';
+                    buttonWrapper.appendChild(inputBox);
+                    inputBox.focus();
+
+                    let entered = false;
+
+                    inputBox.addEventListener('keydown', async function (e) {
+                        if (e.key === 'Enter') {
+                            e.preventDefault();
+                            const value = inputBox.value.trim();
+                            if (value === '') {
+                                inputBox.remove();
+                            } else {
+                                entered = true;
+                                await postNotes(med.id, value); 
+                                const textBox = document.createElement('div');
+                                textBox.className = 'prompt-info';
+                                textBox.textContent = value;
+                                inputBox.replaceWith(textBox);
+                            }
+                        }
+                    });
+
+                    inputBox.addEventListener('blur', async function () {
+                        const value = inputBox.value.trim();
+                        if (!entered && value === '') {
+                            inputBox.remove();
+                        } else if (!entered && value !== '') {
+                            entered = true;
+                            await postNotes(med.id, value);
+                            const textBox = document.createElement('div');
+                            textBox.className = 'prompt-info';
+                            textBox.textContent = value;
+                            inputBox.replaceWith(textBox);
+                            buttonWrapper.appendChild(textBox);
+                        }
+                    });
+                }
+            });
+
+            // Edit Box
+            const editBoxContainer = document.createElement("div");
+            editBoxContainer.className = 'edit-box-container';
+            editBoxContainer.style.display = 'none';
+            editBoxContainer.innerHTML = `
+                <div class="title">
+                    <button type="button" class="close-edit-window">X</button>
+                    <h3>Edit Notification</h3>
+                </div>
+                <div class="edit-features">
+                    <h3>To do item</h3>
+                    <input type="text" placeholder="To do item" id="to-do-items" class="general-info to-do-item" value="${med.name || ''}">
+                    <h3>Day on repeat</h3>
+                    <div class="day-on-repeat">
+                        <input type="text" placeholder="Every_hour" id="repeat-times" class="general-info every-hour-item" value="${med.repeat_times || ''}">
+                        <span class="arrow">→</span>
+                        <input type="text" placeholder="Duration" id="duration-of-reminder" class="general-info frequency-item" value="${med.repeat_duration || ''}">
+                    </div>
+                    <h3>Hour range</h3>
+                    <div class="hour-range-container">
+                        <input type="time" class="general-info first-hour-range" id="startHour" value="${med.start_hour ? med.start_hour.toString().padStart(2, '0') + ':00' : ''}">
+                        <span class="arrow">→</span>
+                        <input type="time" class="general-info second-hour-range" id="endHour" value="${med.end_hour ? med.end_hour.toString().padStart(2, '0') + ':00' : ''}">
+                    </div>
+                    <h3>Repeat</h3>
+                    <div class="routine_option-and-schedule">
+                        <select class="general-info" id="repeat-select">
+                            <option value="daily" ${med.frequency_type === 'daily' ? 'selected' : ''}>Daily</option>
+                            <option value="weekly" ${med.frequency_type === 'weekly' ? 'selected' : ''}>Weekly</option>
+                            <option value="monthly" ${med.frequency_type === 'monthly' ? 'selected' : ''}>Monthly</option>
+                            <option value="yearly" ${med.frequency_type === 'yearly' ? 'selected' : ''}>Yearly</option>
+                        </select>
+                        <button type="submit" class="submit-edit-info">Save</button>
+                    </div>
+                </div>
+            `;
+
+            // Delete object Container
+          deleteNotificationContainer.addEventListener("click", async function() {
+            try {
+                const response = await fetch(`http://localhost:3000/medications/${med.id}`, {
+                    method: 'DELETE'
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    mainDiv.remove();
+                } else {
+                    console.err("Failed to delete: ", result.message);
+                }
+            } catch (err) {
+                console.error("Error deleting medication:", err);
+            }
+        });
+
+            // Append everything
+            mainDiv.appendChild(deleteNotificationContainer);
+            mainDiv.appendChild(layer1);
+            mainDiv.appendChild(hr);
+            mainDiv.appendChild(layer2);
+            parentContainer.appendChild(mainDiv);
+            parentContainer.appendChild(editBoxContainer);
+
+            // Edit button click
+            editButton.addEventListener('click', () => {
+                document.querySelectorAll(".saved-notification-container").forEach(container => {
+                    if (container !== mainDiv) {
+                        container.style.display = 'none';
+                    }
+                });
+                if (editBoxContainer.style.display == 'none') { // If edit container is not open make it open
+                    editBoxContainer.style.display = 'flex';
+                } else if (editBoxContainer.style.display == 'flex') { // If edit container is close open it again
+                    editBoxContainer.style.display = 'none';
+                    document.querySelectorAll(".saved-notification-container").forEach(container => { 
+                    container.style.display = 'flex';
+                });
+                }
+
+            });
+
+            // Close button click
+            const closeBtn = editBoxContainer.querySelector('.close-edit-window');
+            closeBtn.addEventListener('click', () => {
+                editBoxContainer.style.display = 'none';
+                document.querySelectorAll(".saved-notification-container").forEach(container => {
+                    container.style.display = 'flex';
+                });
+            });
+
+            // Submit for edit container click 
+
+            editBoxContainer.querySelector('.submit-edit-info').addEventListener('click', async function(event) {
+    event.preventDefault();
+
+    // Use editBoxContainer.querySelector to get the correct input values
+    const item = editBoxContainer.querySelector('.to-do-item').value;
+    const day_on_repeat = parseInt(editBoxContainer.querySelector('.every-hour-item').value, 10);
+    const duration_of_reminder = parseInt(editBoxContainer.querySelector('.frequency-item').value, 10);
+    const startHour = parseInt(editBoxContainer.querySelector('.first-hour-range').value.split(":")[0]);
+    const endHour = parseInt(editBoxContainer.querySelector('.second-hour-range').value.split(":")[0]);
+    const repeatSelect = editBoxContainer.querySelector('select').value;
+
+    const medicationData = {
+        name: item,
+        repeat_times: day_on_repeat,
+        repeat_duration: duration_of_reminder,
+        start_hour: startHour,
+        end_hour: endHour,
+        frequency_type: repeatSelect,
+        schedule_date: savedDate
+    };
+
+    if (!validateMedicationInput(medicationData)) return;
+
+    try {
+        const response = await fetch(`http://localhost:3000/medications/${med.id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(medicationData)
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+            editBoxContainer.style.display = 'none';
+            ModifyMedicationContainer(); // Refresh list
+            alert("Medication updated successfully!");
+        } else {
+            alert(result.message || "Failed to edit medication.");
+        }
+    } catch (err) {
+        console.error("Error editing medication:", err);
+        alert("Server error. Could not edit medication.");
+    }
+});
+        }
+
+    } catch (err) {
+        console.error("Error loading medications:", err);
+    }
+}
+
+document.addEventListener('DOMContentLoaded', ModifyMedicationContainer);
+
+// Post notes into the sql
+
+
+async function postNotes(medicationId, value) {
+
+    try {
+        const response = await fetch("http://localhost:3000/medication-notes", {
+            method: 'POST',
+            headers: {
+                'Content-type' : 'application/json'
+            },
+            body: JSON.stringify({
+                medicationId: medicationId,
+                note_text: value
+            })
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+            console.log("Note saved to DB", result.message);
+        } else {
+            console.error("Failed to save note", result.message);
+        }
+    } catch (err) {
+        console.error("Error during fetch", err);
+    }
+}
+
+
+window.addEventListener("DOMContentLoaded", displayDate);

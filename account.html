@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Account</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 2rem; }
+    .error { color: red; }
+    .success { color: green; }
+  </style>
+</head>
+<body>
+  <h1>Your Account</h1>
+  <form id="updateForm">
+    <label>Username: <input type="text" name="username" required /></label><br /><br />
+    <label>New Password (leave blank to keep current): <input type="password" name="password" /></label><br /><br />
+    <button type="submit">Update Account</button>
+  </form>
+
+  <button id="deleteBtn" style="margin-top: 1rem; color: white; background: red;">Delete Account</button>
+
+  <div id="message"></div>
+  <p><a href="/login.html">Logout / Back to Login</a></p>
+
+  <script src="js/account.js" defer></script>
+</body>
+</html>
