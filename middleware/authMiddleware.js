@@ -1,22 +1,20 @@
-const jwt = require('jsonwebtoken');
+module.exports = (req, res, next) => {
+  const { email, password } = req.body;
 
-function verifyToken(req, res, next) {
-  const authHeader = req.headers['authorization'];
-
-  if (!authHeader) {
-    return res.status(401).json({ message: 'No token provided' });
+  if (!email || !password) {
+    return res.status(400).json({ message: 'Email and password are required' });
   }
 
-  const token = authHeader.split(' ')[1]; // Bearer <token>
+  // Optional: Add basic email format check
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    return res.status(400).json({ message: 'Invalid email format' });
+  }
 
-  jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
-    if (err) {
-      return res.status(403).json({ message: 'Invalid or expired token' });
-    }
+  // Optional: Enforce minimum password length
+  if (password.length < 6) {
+    return res.status(400).json({ message: 'Password must be at least 6 characters long' });
+  }
 
-    req.user = decoded; // Save decoded payload to use in next middleware or routes
-    next();
-  });
-}
-
-module.exports = verifyToken;
+  next();
+};
