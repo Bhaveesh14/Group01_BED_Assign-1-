@@ -1,105 +1,74 @@
-const bcrypt = require('bcrypt');
 const sql = require('mssql');
-const dbConfig = require('../dbConfig');
+const db = require('../db'); // assumes db connection is initialized here
 
 const UserModel = {
-  findByUsername: async (username) => {
-    let pool;
-    try {
-      pool = await sql.connect(dbConfig);
-      const result = await pool.request()
-        .input('username', sql.VarChar, username)
-        .query('SELECT * FROM Users WHERE username = @username');
-      return result.recordset[0];
-    } catch (error) {
-      console.error('DB query error:', error);
-      throw error;
-    } finally {
-      if (pool) await pool.close();
-    }
-  },
-
-  findById: async (id) => {
-    let pool;
-    try {
-      pool = await sql.connect(dbConfig);
-      const result = await pool.request()
-        .input('id', sql.Int, id)
-        .query('SELECT * FROM Users WHERE id = @id');
-      return result.recordset[0];
-    } catch (error) {
-      console.error('DB query error:', error);
-      throw error;
-    } finally {
-      if (pool) await pool.close();
-    }
-  },
-
-  validatePassword: async (inputPassword, hashedPassword) => {
-    return await bcrypt.compare(inputPassword, hashedPassword);
-  },
-
+  // Create a new user
   createUser: async (user) => {
-    let pool;
-    try {
-      pool = await sql.connect(dbConfig);
-      const result = await pool.request()
-        .input('username', sql.VarChar, user.username)
-        .input('password', sql.VarChar, user.password)
-        .input('role', sql.VarChar, user.role)
-        .query('INSERT INTO Users (username, password, role) VALUES (@username, @password, @role)');
-      return result.rowsAffected[0] === 1;
-    } catch (error) {
-      console.error('DB insert error:', error);
-      throw error;
-    } finally {
-      if (pool) await pool.close();
-    }
+    const request = new sql.Request();
+    request.input('name', sql.VarChar, user.name);
+    request.input('email', sql.VarChar, user.email);
+    request.input('passwordHash', sql.VarChar, user.password); // Consider hashing
+    request.input('dob', sql.Date, user.dateOfBirth);
+    request.input('gender', sql.VarChar, user.gender);
+    request.input('conditions', sql.Text, user.healthConditions || '');
+
+    const result = await request.query(`
+      INSERT INTO Users (Name, Email, PasswordHash, DateOfBirth, Gender, HealthConditions)
+      VALUES (@name, @email, @passwordHash, @dob, @gender, @conditions);
+      SELECT SCOPE_IDENTITY() AS UserID;
+    `);
+
+    return { userId: result.recordset[0].UserID };
   },
 
-  updateUser: async (id, userData) => {
-    let pool;
-    try {
-      pool = await sql.connect(dbConfig);
-      const query = `
-        UPDATE Users
-        SET 
-          username = @username,
-          ${userData.password ? 'password = @password,' : ''}
-          role = @role
-        WHERE id = @id
-      `;
-      const request = pool.request()
-        .input('id', sql.Int, id)
-        .input('username', sql.VarChar, userData.username)
-        .input('role', sql.VarChar, userData.role);
+  // Read user by ID
+  getUserById: async (id) => {
+    const request = new sql.Request();
+    request.input('id', sql.Int, id);
 
-      if (userData.password) {
-        request.input('password', sql.VarChar, userData.password);
-      }
+    const result = await request.query(`
+      SELECT * FROM Users WHERE UserID = @id
+    `);
 
-      // Clean up trailing comma before WHERE clause
-      const formattedQuery = query.replace(/,\s*WHERE/, ' WHERE');
-
-      const result = await request.query(formattedQuery);
-      return result.rowsAffected[0] > 0;
-    } finally {
-      if (pool) await pool.close();
-    }
+    return result.recordset[0];
   },
 
+  // Read all users
+  getAllUsers: async () => {
+    const result = await new sql.Request().query(`
+      SELECT * FROM Users
+    `);
+    return result.recordset;
+  },
+
+  // Update user email and password
+  updateUser: async (id, email, password) => {
+    const request = new sql.Request();
+    request.input('id', sql.Int, id);
+    request.input('email', sql.VarChar, email);
+    request.input('password', sql.VarChar, password); // ideally hashed
+
+    await request.query(`
+      UPDATE Users
+      SET Email = @email, PasswordHash = @password
+      WHERE UserID = @id
+    `);
+
+    return { message: 'User updated successfully' };
+  },
+
+  // Delete user
   deleteUser: async (id) => {
-    let pool;
-    try {
-      pool = await sql.connect(dbConfig);
-      const result = await pool.request()
-        .input('id', sql.Int, id)
-        .query('DELETE FROM Users WHERE id = @id');
-      return result.rowsAffected[0] > 0;
-    } finally {
-      if (pool) await pool.close();
-    }
+    const request = new sql.Request();
+    request.input('id', sql.Int, id);
+
+    await request.query(`
+      DELETE FROM Users WHERE UserID = @id
+    `);
+
+    return { message: 'User deleted successfully' };
   }
 };
 
 module.exports = UserModel;
+
