@@ -18,10 +18,16 @@ app.use(express.static(path.join(__dirname, 'public')));
 const loginRoutes = require('./routes/loginRoutes');
 const registerRoutes = require('./routes/registerRoutes');
 const userRoutes = require('./routes/userRoutes');
+const appointmentRoutes = require('./routes/appointmentRoutes');
+
+
+
+
 
 app.use('/login', loginRoutes);
 app.use('/register', registerRoutes);
 app.use('/users', userRoutes);
+app.use('/appointments', appointmentRoutes);
 
 // 404 handler
 app.use((req, res) => {
