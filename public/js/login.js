@@ -1,6 +1,11 @@
 const loginForm = document.getElementById('loginForm');
 const messageDiv = document.getElementById('message');
 
+
+document.getElementById('adminChangePasswordBtn').addEventListener('click', () => {
+  window.location.href = '/admin-login.html';
+});
+
 loginForm.addEventListener('submit', async (e) => {
   e.preventDefault();
 

@@ -22,8 +22,6 @@ const appointmentRoutes = require('./routes/appointmentRoutes');
 
 
 
-
-
 app.use('/login', loginRoutes);
 app.use('/register', registerRoutes);
 app.use('/users', userRoutes);

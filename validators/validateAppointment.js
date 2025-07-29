@@ -1,9 +1,10 @@
 const Joi = require('joi');
 
 const createAppointmentSchema = Joi.object({
-  appointmentDate: Joi.date().iso().required().messages({
+  appointmentDate: Joi.date().iso().required().min('now').messages({
     'any.required': 'Appointment date is required',
-    'date.base': 'Appointment date must be a valid ISO date'
+    'date.base': 'Appointment date must be a valid ISO date',
+    'date.min': 'Appointment date cannot be in the past'
   }),
   description: Joi.string().max(255).required().messages({
     'any.required': 'Description is required',
@@ -11,6 +12,7 @@ const createAppointmentSchema = Joi.object({
     'string.max': 'Description must not exceed 255 characters'
   })
 });
+
 
 
 function validateCreateAppointment(req, res, next) {

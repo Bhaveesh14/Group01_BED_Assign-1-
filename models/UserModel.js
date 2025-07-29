@@ -61,28 +61,41 @@ const UserModel = {
     let pool;
     try {
       pool = await sql.connect(dbConfig);
-      const query = `
-        UPDATE Users
-        SET 
-          username = @username,
-          ${userData.password ? 'password = @password,' : ''}
-          role = @role
-        WHERE id = @id
-      `;
-      const request = pool.request()
-        .input('id', sql.Int, id)
-        .input('username', sql.VarChar, userData.username)
-        .input('role', sql.VarChar, userData.role);
 
-      if (userData.password) {
-        request.input('password', sql.VarChar, userData.password);
+      // Collect fields to update dynamically
+      const fields = [];
+      if (userData.username !== undefined) fields.push('username = @username');
+      if (userData.password !== undefined) fields.push('password = @password');
+      if (userData.role !== undefined) fields.push('role = @role');
+
+      if (fields.length === 0) {
+        // Nothing to update
+        return false;
       }
 
-      // Clean up trailing comma before WHERE clause
-      const formattedQuery = query.replace(/,\s*WHERE/, ' WHERE');
+      const query = `
+        UPDATE Users
+        SET ${fields.join(', ')}
+        WHERE id = @id
+      `;
 
-      const result = await request.query(formattedQuery);
+      const request = pool.request().input('id', sql.Int, id);
+
+      if (userData.username !== undefined) {
+        request.input('username', sql.VarChar, userData.username);
+      }
+      if (userData.password !== undefined) {
+        request.input('password', sql.VarChar, userData.password);
+      }
+      if (userData.role !== undefined) {
+        request.input('role', sql.VarChar, userData.role);
+      }
+
+      const result = await request.query(query);
       return result.rowsAffected[0] > 0;
+    } catch (error) {
+      console.error('UpdateUser error:', error);
+      throw error;
     } finally {
       if (pool) await pool.close();
     }
@@ -96,10 +109,29 @@ const UserModel = {
         .input('id', sql.Int, id)
         .query('DELETE FROM Users WHERE id = @id');
       return result.rowsAffected[0] > 0;
+    } catch (error) {
+      console.error('DeleteUser error:', error);
+      throw error;
     } finally {
       if (pool) await pool.close();
     }
+  },
+  deleteUserByUsername: async (username) => {
+  let pool;
+  try {
+    pool = await sql.connect(dbConfig);
+    const result = await pool.request()
+      .input('username', sql.VarChar, username)
+      .query('DELETE FROM Users WHERE username = @username');
+    return result.rowsAffected[0] > 0;
+  } catch (error) {
+    console.error('deleteUserByUsername error:', error);
+    throw error;
+  } finally {
+    if (pool) await pool.close();
   }
+}
+
 };
 
 module.exports = UserModel;

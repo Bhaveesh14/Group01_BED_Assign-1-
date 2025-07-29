@@ -19,10 +19,11 @@ const LoginController = {
       }
 
       const token = jwt.sign(
-        { userId: user.id, username: user.username },
-        process.env.JWT_SECRET,
-        { expiresIn: '1h' }
-      );
+      { userId: user.id, username: user.username, role: user.role },
+       process.env.JWT_SECRET,
+      { expiresIn: '1h' }
+);
+
 
       return res.status(200).json({ message: 'Login successful', token });
     } catch (error) {

@@ -29,7 +29,7 @@ async function loadAppointments() {
         const card = document.createElement('div');
         card.className = 'appointment-card';
         card.innerHTML = `
-          <strong>Date:</strong> ${new Date(app.date).toLocaleString()}<br>
+          <strong>Date:</strong> ${new Date(app.appointmentDate).toLocaleString()}<br>
           <strong>Description:</strong> ${app.description}<br>
           <button onclick="deleteAppointment(${app.appointmentId})">Delete</button>
         `;
@@ -44,7 +44,7 @@ async function loadAppointments() {
 
 appointmentForm.addEventListener('submit', async (e) => {
   e.preventDefault();
-  const date = appointmentForm.date.value;
+  const appointmentDate = appointmentForm.appointmentDate.value;
   const description = appointmentForm.description.value;
 
   try {
@@ -54,7 +54,7 @@ appointmentForm.addEventListener('submit', async (e) => {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${token}`
       },
-      body: JSON.stringify({ date, description })
+      body: JSON.stringify({ appointmentDate, description })
     });
 
     const data = await res.json();

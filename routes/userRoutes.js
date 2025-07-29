@@ -7,9 +7,21 @@ const verifyToken = require('../middleware/authMiddleware'); // protect routes
 router.get('/:id', verifyToken, UserController.getUserById);
 
 // Update user info
-router.put('/:id', verifyToken, UserController.updateUser);
+//router.put('/:id', verifyToken, UserController.updateUser);
 
 // Delete user
-router.delete('/:id', verifyToken, UserController.deleteUser);
+// router.delete('/:id', verifyToken, UserController.deleteUser);
+
+// allows the admin to change the password
+router.put('/admin/change-password', verifyToken, UserController.adminChangePassword);
+
+// Allows admin to delete a user
+//router.delete('/admin/delete/:id', verifyToken, UserController.deleteUser);
+
+// 🔐 Only admin should be allowed to delete a user
+router.delete('/:username', verifyToken, UserController.deleteUserByUsername);
+
+
+
 
 module.exports = router;

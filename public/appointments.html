@@ -20,19 +20,20 @@
   <h1>My Medical Appointments</h1>
 
   <form id="appointmentForm">
-    <label>Date & Time: <input type="datetime-local" name="date" required></label><br><br>
+    <label>Date & Time: <input type="datetime-local" name="appointmentDate" required></label><br><br>
     <label>Description: <input type="text" name="description" required></label><br><br>
     <button type="submit">Add Appointment</button>
   </form>
 
   <div id="message"></div>
+
   <h2>Upcoming Appointments</h2>
   <div id="appointmentsList"></div>
-  <!-- Add below your appointmentsList div -->
-<p>
-  <button onclick="window.location.href='update-appointment.html'">Update Appointment</button>
-  <button onclick="window.location.href='delete-appointment.html'">Delete Appointment</button>
-</p>
+
+  <p>
+    <button onclick="window.location.href='update-appointment.html'">Update Appointment</button>
+    <button onclick="window.location.href='delete-appointment.html'">Delete Appointment</button>
+  </p>
 
   <p><button onclick="logout()">Logout</button></p>
 
